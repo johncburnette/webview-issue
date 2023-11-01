@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Observer Example</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+    aliqua. Eu lobortis elementum nibh tellus molestie nunc. Quis varius quam quisque id diam vel quam elementum
+    pulvinar.
+    Fermentum odio eu feugiat pretium nibh ipsum consequat. Amet venenatis urna cursus eget. Cursus metus aliquam
+    eleifend
+    mi in nulla. Ac tortor vitae purus faucibus ornare. Ut consequat semper viverra nam libero justo laoreet. Enim
+    blandit
+    volutpat maecenas volutpat blandit aliquam etiam. Mauris pharetra et ultrices neque ornare. Massa tempor nec feugiat
+    nisl pretium fusce id velit. In hendrerit gravida rutrum quisque non. Quam viverra orci sagittis eu volutpat.
+    Venenatis
+    a condimentum vitae sapien pellentesque habitant. Sem fringilla ut morbi tincidunt augue interdum velit.
+
+
+  </p>
+  <p>
+    Facilisi nullam vehicula ipsum a arcu cursus vitae. Ullamcorper velit sed ullamcorper morbi tincidunt ornare. Id
+    diam
+    maecenas ultricies mi eget mauris pharetra et ultrices. Eget magna fermentum iaculis eu non diam phasellus
+    vestibulum
+    lorem. Id consectetur purus ut faucibus pulvinar elementum integer enim neque. Suspendisse in est ante in nibh
+    mauris
+    cursus mattis molestie. In vitae turpis massa sed elementum tempus egestas sed. Ac orci phasellus egestas tellus
+    rutrum
+    tellus pellentesque eu tincidunt. Orci sagittis eu volutpat odio facilisis mauris sit amet massa. Amet volutpat
+    consequat mauris nunc. Eget gravida cum sociis natoque penatibus et. Non blandit massa enim nec dui nunc mattis.
+    Blandit
+    libero volutpat sed cras ornare arcu dui vivamus.
+
+
+  </p>
+  <p>
+    Tellus in hac habitasse platea dictumst. Faucibus interdum posuere lorem ipsum dolor sit amet consectetur
+    adipiscing. In
+    eu mi bibendum neque egestas congue. Ante in nibh mauris cursus mattis. Urna cursus eget nunc scelerisque viverra.
+    Convallis posuere morbi leo urna molestie at. Rhoncus est pellentesque elit ullamcorper dignissim cras tincidunt
+    lobortis feugiat. In eu mi bibendum neque egestas congue quisque egestas. Vitae sapien pellentesque habitant morbi
+    tristique senectus. Lobortis scelerisque fermentum dui faucibus in ornare quam viverra orci. Magna eget est lorem
+    ipsum
+    dolor sit amet consectetur. Urna porttitor rhoncus dolor purus non enim praesent. Pharetra convallis posuere morbi
+    leo
+    urna molestie at. Libero nunc consequat interdum varius sit amet mattis vulputate. Consequat semper viverra nam
+    libero
+    justo laoreet. Magnis dis parturient montes nascetur ridiculus. Ornare arcu odio ut sem nulla pharetra. Ullamcorper
+    dignissim cras tincidunt lobortis. A arcu cursus vitae congue mauris rhoncus aenean.
+
+
+  </p>
+  <p>
+    Laoreet sit amet cursus sit amet dictum sit amet justo. Turpis tincidunt id aliquet risus feugiat in ante metus
+    dictum.
+    Morbi tristique senectus et netus et malesuada fames ac turpis. Bibendum neque egestas congue quisque. Sem et tortor
+    consequat id porta nibh venenatis cras sed. Lacinia at quis risus sed vulputate odio. Risus nullam eget felis eget
+    nunc.
+    In fermentum posuere urna nec tincidunt. Tellus cras adipiscing enim eu. Vitae aliquet nec ullamcorper sit amet
+    risus
+    nullam eget felis. Sem et tortor consequat id porta nibh. Ultricies lacus sed turpis tincidunt id. Vulputate ut
+    pharetra
+    sit amet aliquam id. Cursus eget nunc scelerisque viverra mauris in aliquam sem. Porttitor eget dolor morbi non arcu
+    risus quis. Sed id semper risus in hendrerit gravida. Egestas erat imperdiet sed euismod nisi porta lorem mollis
+    aliquam. Vestibulum lectus mauris ultrices eros in cursus turpis massa tincidunt.
+
+
+  </p>
+  <p>
+    Velit scelerisque in dictum non consectetur a erat. Commodo nulla facilisi nullam vehicula ipsum. Magna sit amet
+    purus
+    gravida. Suscipit tellus mauris a diam maecenas. Neque sodales ut etiam sit. Felis donec et odio pellentesque diam.
+    Mollis nunc sed id semper risus in hendrerit gravida. Parturient montes nascetur ridiculus mus mauris vitae
+    ultricies
+    leo. Etiam dignissim diam quis enim lobortis scelerisque fermentum dui faucibus. Nec dui nunc mattis enim. Egestas
+    sed
+    sed risus pretium quam. Sed faucibus turpis in eu. Nec feugiat in fermentum posuere urna nec. Ac odio tempor orci
+    dapibus ultrices. Elementum nisi quis eleifend quam adipiscing vitae proin sagittis. Sagittis vitae et leo duis ut.
+  </p> -->
+  <div id="observable-element">This element is observed</div>
+  <script>
+    const options = {
+      threshold: 0.95
+    };
+
+    const onIntersection = ([entry]) => {
+      console.log(entry);
+      if ('ReactNativeWebView' in window) window.ReactNativeWebView.postMessage(JSON.stringify({
+        intersectionRatio: entry?.intersectionRatio,
+        isIntersecting: entry?.isIntersecting,
+      }));
+    };
+
+    const observer = new IntersectionObserver(onIntersection, options);
+    const observable = document.querySelector('#observable-element');
+
+    if (observable) observer.observe(observable);
+  </script>
+</body>
+
+</html>
