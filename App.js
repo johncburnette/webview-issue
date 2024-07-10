@@ -1,33 +1,31 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   StyleSheet,
   Text,
   SafeAreaView,
-  ScrollView,
-  Platform
+  Platform,
+  ScrollView
 } from 'react-native';
-import { WebView } from 'react-native-webview';
-import { useAssets } from 'expo-asset';
-import { readAsStringAsync } from 'expo-file-system';
+import RevcontentWidget, {
+  onRevcontentVisibilityChange
+} from './components/RevcontentWidget';
+import RevcontentNativeView from './components/RevcontentNativeView';
 
 export default function App() {
-  const onMessage = ({ nativeEvent }) => {
-    const data = JSON.parse(nativeEvent.data);
-    console.log(data);
-  };
+  const [scrollPosition, setScrollPosition] = useState(null);
 
-  const [index, indexLoadingError] = useAssets(
-    require('./assets/observer.html')
+  const onScroll = event => setScrollPosition(event.nativeEvent);
+  const onExperimentalScroll = useCallback(
+    () => onRevcontentVisibilityChange(),
+    []
   );
-
-  const [html, setHtml] = useState('');
-
-  if (index) readAsStringAsync(index[0].localUri).then(data => setHtml(data));
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView>
+      <ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={100}>
         <Text style={styles.p}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -86,25 +84,17 @@ export default function App() {
           enim diam. Mauris vitae ultricies leo integer malesuada. Suspendisse
           sed nisi lacus sed viverra tellus in.
         </Text>
-        <WebView
-          originWhitelist={['*']}
-          scrollEnabled={false}
-          style={{
-            flex: 1,
-            height: 150
-          }}
-          onMessage={onMessage}
-          source={{ html }}></WebView>
+        <RevcontentNativeView
+          widgetId={66621}
+          pubId={84088}
+          scrollPosition={scrollPosition}
+          siteUrl={'https://app.revcontent.com'}
+        />
+
+        {/* <RevcontentWidget
+          widgetId={66621}
+          pubId={84088}></RevcontentWidget> */}
       </ScrollView>
-      {/* <WebView
-        originWhitelist={['*']}
-        style={{
-          flex: 1
-        }}
-        onMessage={onMessage}
-        source={{
-          html
-        }}></WebView> */}
       <StatusBar style="auto" />
     </SafeAreaView>
   );

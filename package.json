@@ -9,16 +9,19 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~49.0.15",
-    "expo-status-bar": "~1.6.0",
+    "expo": "^51.0.18",
+    "expo-asset": "~10.0.10",
+    "expo-file-system": "~17.0.1",
+    "expo-status-bar": "~1.12.1",
+    "intersection-observer": "^0.12.2",
     "react": "18.2.0",
-    "react-native": "0.72.6",
-    "react-native-webview": "^13.6.2",
-    "expo-asset": "~8.10.1",
-    "expo-file-system": "~15.4.4"
+    "react-native": "0.74.3",
+    "react-native-intersection-observer": "^0.2.0",
+    "react-native-webview": "13.8.6",
+    "rn-intersection-observer": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.24.0"
   },
   "private": true
 }
