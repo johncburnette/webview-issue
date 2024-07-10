@@ -1,7 +1,7 @@
 import WebView from 'react-native-webview';
 import { useAssets } from 'expo-asset';
 import { readAsStringAsync } from 'expo-file-system';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 
 const getInjectedMessage = message => {
   return `
@@ -13,7 +13,7 @@ const getInjectedMessage = message => {
   `;
 };
 
-const RevcontentNativeView = ({ widgetId, pubId, siteUrl, scrollPosition }) => {
+const RevcontentNativeView = forwardRef(({ widgetId, pubId, siteUrl }, ref) => {
   if (!widgetId) throw new TypeError('You must supply a valid widget ID');
   if (!pubId) throw new TypeError('You must supply a valid publisher ID');
   if (!siteUrl) throw new TypeError('You must supply a valid site URL');
@@ -27,7 +27,6 @@ const RevcontentNativeView = ({ widgetId, pubId, siteUrl, scrollPosition }) => {
     readAsStringAsync(index[0].localUri).then(data => {
       data = data.replace('data-widget-id="0"', `data-widget-id="${widgetId}"`);
       data = data.replace('data-pub-id="0"', `data-pub-id="${pubId}"`);
-
       setHtml(data);
     });
 
@@ -36,9 +35,10 @@ const RevcontentNativeView = ({ widgetId, pubId, siteUrl, scrollPosition }) => {
     if (data.height) setViewHeight(data.height);
   };
 
-  useEffect(() => {
-    webViewRef.current.injectJavaScript(getInjectedMessage(scrollPosition));
-  }, [scrollPosition]);
+  useImperativeHandle(ref, () => ({
+    onScroll: data =>
+      webViewRef.current.injectJavaScript(getInjectedMessage(data))
+  }));
 
   return (
     <WebView
@@ -49,6 +49,6 @@ const RevcontentNativeView = ({ widgetId, pubId, siteUrl, scrollPosition }) => {
       style={{ flex: 1, height: viewHeight }}
       source={{ html }}></WebView>
   );
-};
+});
 
 export default RevcontentNativeView;

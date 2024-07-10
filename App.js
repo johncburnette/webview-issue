@@ -13,9 +13,11 @@ import RevcontentWidget, {
 import RevcontentNativeView from './components/RevcontentNativeView';
 
 export default function App() {
-  const [scrollPosition, setScrollPosition] = useState(null);
+const widgetRef = useRef(null);
 
-  const onScroll = event => setScrollPosition(event.nativeEvent);
+const onScroll = event => {
+  widgetRef.current?.onScroll(event.nativeEvent);
+};
   const onExperimentalScroll = useCallback(
     () => onRevcontentVisibilityChange(),
     []
@@ -84,12 +86,12 @@ export default function App() {
           enim diam. Mauris vitae ultricies leo integer malesuada. Suspendisse
           sed nisi lacus sed viverra tellus in.
         </Text>
-        <RevcontentNativeView
-          widgetId={66621}
-          pubId={84088}
-          scrollPosition={scrollPosition}
-          siteUrl={'https://app.revcontent.com'}
-        />
+<RevcontentNativeView
+  ref={widgetRef}
+  widgetId={66621}
+  pubId={84088}
+  siteUrl={'https://app.revcontent.com'}
+/>
 
         {/* <RevcontentWidget
           widgetId={66621}
