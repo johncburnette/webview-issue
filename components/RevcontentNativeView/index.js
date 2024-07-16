@@ -1,6 +1,3 @@
-import WebView from 'react-native-webview';
-import { useAssets } from 'expo-asset';
-import { readAsStringAsync } from 'expo-file-system';
 import {
   useRef,
   useState,
@@ -8,7 +5,13 @@ import {
   useImperativeHandle,
   useEffect
 } from 'react';
-import { Text, View } from 'react-native';
+import { View, Text, useWindowDimensions } from 'react-native';
+import WebView from 'react-native-webview';
+import { useAssets } from 'expo-asset';
+import { readAsStringAsync } from 'expo-file-system';
+
+import { isEqual } from './utils';
+import useInterval from './hooks/useInterval';
 
 const getInjectedMessage = message => {
   return `
@@ -20,134 +23,176 @@ const getInjectedMessage = message => {
   `;
 };
 
-const RevcontentNativeView = forwardRef(({ widgetId, pubId, siteUrl }, ref) => {
-  if (!widgetId) throw new TypeError('You must supply a valid widget ID');
-  if (!pubId) throw new TypeError('You must supply a valid publisher ID');
-  if (!siteUrl) throw new TypeError('You must supply a valid site URL');
-  if (!ref)
-    throw new TypeError(
-      'RevcontentNativeView requires a ref to dispatch scroll position'
-    );
-  const [index] = useAssets(require('./assets/widget.html'));
-  const viewRef = useRef(null);
-  const webViewRef = useRef(null);
-  const [html, setHtml] = useState('');
-  const [viewHeight, setViewHeight] = useState(0);
-  const [screenDimensions, setScreenDimensions] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  });
-  const [scrollDimensions, setScrollDimensions] = useState({
-    contentInset: { bottom: 0, left: 0, right: 0, top: 0 },
-    contentOffset: { x: 0, y: 0 },
-    contentSize: { height: 0, width: 0 },
-    layoutMeasurement: { height: 0, width: 0 },
-    zoomScale: 1
-  });
-  const [relativeLayout, setRelativeLayout] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  });
+const screenObservations = {
+  viewSize: {
+    width: null,
+    height: null
+  },
+  relativePosition: {
+    x: null,
+    y: null
+  }
+};
 
-  if (index)
-    readAsStringAsync(index[0].localUri).then(data => {
-      data = data.replace('data-widget-id="0"', `data-widget-id="${widgetId}"`);
-      data = data.replace('data-pub-id="0"', `data-pub-id="${pubId}"`);
-      setHtml(data);
+const RevcontentNativeView = forwardRef(
+  ({ widgetId, pubId, siteUrl, insets = {} }, ref) => {
+    if (!widgetId) throw new TypeError('You must supply a valid widget ID');
+    if (!pubId) throw new TypeError('You must supply a valid publisher ID');
+    if (!siteUrl) throw new TypeError('You must supply a valid site URL');
+    if (!ref)
+      throw new TypeError(
+        'RevcontentNativeView requires a ref to dispatch scroll position'
+      );
+    const [index] = useAssets(require('./assets/widget.html'));
+    const { width, height } = useWindowDimensions();
+
+    const viewRef = useRef(null);
+    const webViewRef = useRef(null);
+    const [html, setHtml] = useState('');
+    const [viewHeight, setViewHeight] = useState(0);
+
+    const [screenSize] = useState({ width, height });
+
+    const [viewSize, setViewSize] = useState({
+      width: null,
+      height: null
     });
 
-  const onMessage = ({ nativeEvent }) => {
-    const data = JSON.parse(nativeEvent.data);
-    if (data.height) setViewHeight(data.height);
-  };
+    const [relativePosition, setRelativePosition] = useState({
+      x: null,
+      y: null
+    });
 
-  useImperativeHandle(ref, () => ({
-    onScroll: data => {
-      //save scroll values to state
-      setScrollDimensions(data);
+    const [screenDimensions, setScreenDimensions] = useState({
+      x: null,
+      y: null,
+      width: null,
+      height: null
+    });
 
+    const [isWidgetIntersecting, setIsWidgetIntersecting] = useState(false);
+
+    if (index)
+      readAsStringAsync(index[0].localUri).then(data => {
+        data = data.replace(
+          'data-widget-id="0"',
+          `data-widget-id="${widgetId}"`
+        );
+        data = data.replace('data-pub-id="0"', `data-pub-id="${pubId}"`);
+        setHtml(data);
+      });
+
+    const onMessage = ({ nativeEvent }) => {
+      console.log(nativeEvent);
+      const data = JSON.parse(nativeEvent.data);
+      if (data.height) setViewHeight(data.height);
+    };
+
+    const measureDimensions = () => {
+      viewRef.current.measureInWindow((x, y, width, height) => {
+        if (!isEqual(screenObservations.relativePosition, { x, y }))
+          screenObservations.relativePosition = {
+            x,
+            y
+          };
+      });
+
+      viewRef.current.measure((x, y, width, height, pageX, pageY) => {
+        if (
+          !isEqual(screenObservations.viewSize, {
+            width,
+            height,
+            x,
+            y,
+            pageX,
+            pageY
+          })
+        )
+          screenObservations.viewSize = { width, height, x, y, pageX, pageY };
+      });
+    };
+
+    const onScroll = async data => {
       //measure the relative position to state
-      viewRef.current.measure((x, y, width, height) =>
-        setRelativeLayout({
-          x,
-          y,
-          width,
-          height
-        })
-      );
+      await measureDimensions();
+
       // We need to calculate the content position with the offest to determine where the
       // top position of the widget is so we can try to then figure out what should be considered
       // in view
       const contentOffsetWithLayout =
         data.contentOffset.y + data.layoutMeasurement.height;
-      const isWidgetIntersecting = contentOffsetWithLayout >= relativeLayout.y;
 
       webViewRef.current.injectJavaScript(
         getInjectedMessage({
-          action: 'scroll',
-          payload: data
+          widgetOffset: relativePosition.y,
+          contentOffset: contentOffsetWithLayout,
+          isWidgetIntersecting,
+          screenDimensions: {
+            width: screenDimensions.width,
+            height: screenDimensions.height
+          }
         })
       );
-    }
-  }));
+    };
 
-  useEffect(() => {
-    viewRef.current?.measureInWindow((x, y, width, height) => {
-      // limit state update to only when any dimension doesn't match what's current in state
-      if (
-        x !== screenDimensions.x ||
-        y !== screenDimensions.y ||
-        width !== screenDimensions.width ||
-        height !== screenDimensions.height
-      ) {
-        setScreenDimensions({ x, y, width, height });
+    useImperativeHandle(ref, () => ({
+      onScroll: onScroll
+    }));
+
+    useInterval(() => {
+      measureDimensions();
+      // Check if the screenObservations object is equal to the state version. If it's not
+      // update it so that it can be dispatched to web view
+
+      if (!isEqual(screenObservations.relativePosition, relativePosition))
+        setRelativePosition(screenObservations.relativePosition);
+      if (!isEqual(screenObservations.viewSize, viewSize))
+        setViewSize(screenObservations.viewSize);
+    }, 100);
+
+    useEffect(() => {
+      if (relativePosition.y !== null && relativePosition.y <= height) {
+        setIsWidgetIntersecting(true);
+      } else {
+        setIsWidgetIntersecting(false);
       }
-    });
-  });
+    }, [screenSize, viewSize, relativePosition]);
 
-  useEffect(() => {
-    //send back screen dimensions
-    webViewRef.current.injectJavaScript(
-      getInjectedMessage({
-        action: 'screen',
-        payload: screenDimensions
-      })
-    );
-  }, [screenDimensions]);
+    useEffect(() => {
+      console.log({ isWidgetIntersecting });
+    }, [isWidgetIntersecting]);
 
-  return (
-    <View
-      ref={viewRef}
-      style={{
-        flex: 1,
-        height: viewHeight
-      }}>
+    return (
       <View
+        ref={viewRef}
+        collapsable={false}
         style={{
-          position: 'relative',
-          top: 0,
-          right: 0,
-          left: 0,
-          zIndex: 123234,
-          backgroundColor: '#e7e7e7',
-          padding: 15
+          flex: 1,
+          height: viewHeight
         }}>
-        <Text>{JSON.stringify(screenDimensions)}</Text>
-        <Text>{JSON.stringify(scrollDimensions)}</Text>
+        <View
+          style={{
+            backgroundColor: 'white',
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            top: 0,
+            zIndex: 123546
+          }}>
+          <Text>{isWidgetIntersecting.toString()}</Text>
+          <Text>{JSON.stringify(relativePosition)}</Text>
+          <Text>{JSON.stringify(viewSize)}</Text>
+        </View>
+        <WebView
+          ref={webViewRef}
+          originWhitelist={['*']}
+          scrollEnabled={false}
+          onMessage={onMessage}
+          style={{ flex: 1, height: viewHeight }}
+          source={{ html }}></WebView>
       </View>
-      <WebView
-        ref={webViewRef}
-        originWhitelist={['*']}
-        scrollEnabled={false}
-        onMessage={onMessage}
-        style={{ flex: 1, height: viewHeight }}
-        source={{ html }}></WebView>
-    </View>
-  );
-});
+    );
+  }
+);
 
 export default RevcontentNativeView;
