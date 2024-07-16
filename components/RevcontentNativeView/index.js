@@ -83,7 +83,6 @@ const RevcontentNativeView = forwardRef(
       });
 
     const onMessage = ({ nativeEvent }) => {
-      console.log(nativeEvent);
       const data = JSON.parse(nativeEvent.data);
       if (data.height) setViewHeight(data.height);
     };
