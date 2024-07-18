@@ -11,8 +11,8 @@ import RevcontentNativeView from './components/RevcontentNativeView';
 
 export default function App() {
   const widgetRef = useRef(null);
-  const onScroll = event => {
-    widgetRef.current?.onScroll(event.nativeEvent);
+  const onScroll = ({ nativeEvent }) => {
+    widgetRef.current?.onScroll(nativeEvent);
   };
 
   return (
@@ -84,7 +84,7 @@ export default function App() {
           pubId={84088}
           siteUrl={'https://app.revcontent.com'}
         />
-        {/* <Text style={styles.p}>
+        <Text style={styles.p}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua.
           Ullamcorper velit sed ullamcorper morbi tincidunt ornare massa eget
@@ -141,7 +141,7 @@ export default function App() {
           erat pellentesque adipiscing. Sit amet dictum sit amet justo donec
           enim diam. Mauris vitae ultricies leo integer malesuada. Suspendisse
           sed nisi lacus sed viverra tellus in.
-        </Text> */}
+        </Text>
       </ScrollView>
       <StatusBar style="auto" />
     </SafeAreaView>

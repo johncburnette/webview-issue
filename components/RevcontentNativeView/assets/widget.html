@@ -14,9 +14,11 @@
 </head>
 
 <body>
-  <div data-widget-host="revcontent" data-pub-id="0" data-widget-id="0">
+  <div data-widget-host="revcontent" data-pub-id="{PUBLISHER_ID}" data-widget-id="{WIDGET_ID}">
   </div>
-  <script type="text/javascript" src="https://sbinnala.revcontent.dev/widget.js"></script>
+  <script src="https://delivery.revcontent.com/{PUBLISHER_ID}/{WIDGET_ID}/widget.js"></script>
+  <!--use a local script with a externally accesible url for local development testing-->
+  <!-- <script src="https://b545-35-136-204-9.ngrok-free.app/widget.js"></script> -->
 </body>
 
 </html>
